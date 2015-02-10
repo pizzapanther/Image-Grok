@@ -12,28 +12,29 @@ https://docs.djangoproject.com/en/dev/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+BASE_DIR = os.path.normpath(os.path.join(BASE_DIR, '..'))
 
 # Application definition
 
 INSTALLED_APPS = (
-  'django.contrib.admin',
-  'django.contrib.auth',
-  'django.contrib.contenttypes',
-  'django.contrib.sessions',
-  'django.contrib.messages',
-  'django.contrib.staticfiles',
+  #'django.contrib.admin',
+  #'django.contrib.auth',
+  #'django.contrib.contenttypes',
+  #'django.contrib.sessions',
+  #'django.contrib.messages',
+  #'django.contrib.staticfiles',
 )
 
 MIDDLEWARE_CLASSES = (
-  'django.contrib.sessions.middleware.SessionMiddleware',
-  'django.middleware.common.CommonMiddleware',
-  'django.middleware.csrf.CsrfViewMiddleware',
-  'django.contrib.auth.middleware.AuthenticationMiddleware',
-  'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
-  'django.contrib.messages.middleware.MessageMiddleware',
-  'django.middleware.clickjacking.XFrameOptionsMiddleware',
-  'django.middleware.security.SecurityMiddleware',
+  #'django.contrib.sessions.middleware.SessionMiddleware',
+  #'django.middleware.common.CommonMiddleware',
+  #'django.middleware.csrf.CsrfViewMiddleware',
+  #'django.contrib.auth.middleware.AuthenticationMiddleware',
+  #'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
+  #'django.contrib.messages.middleware.MessageMiddleware',
+  #'django.middleware.clickjacking.XFrameOptionsMiddleware',
+  #'django.middleware.security.SecurityMiddleware',
 )
 
 ROOT_URLCONF = 'igrok.urls'
@@ -60,12 +61,17 @@ WSGI_APPLICATION = 'igrok.wsgi.application'
 # https://docs.djangoproject.com/en/dev/ref/settings/#databases
 
 DATABASES = {
-  'default': {
-    'ENGINE': 'django.db.backends.sqlite3',
-    'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-  }
+  #'default': {
+  #  'ENGINE': 'django.db.backends.sqlite3',
+  #  'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+  #}
 }
 
+CACHES = {
+  'default': {
+    'BACKEND': 'igrok.cache.MemcachedCache',
+  }
+}
 
 # Internationalization
 # https://docs.djangoproject.com/en/dev/topics/i18n/
@@ -73,15 +79,20 @@ DATABASES = {
 LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/dev/howto/static-files/
 
 STATIC_URL = '/static/'
+
+GOOGLE_CLOUD_STORAGE_BUCKET = '/imagegrok.appspot.com'
+DEV = False
+
+from igrok.settings.prod import *
+
+if os.environ.has_key('SERVER_SOFTWARE') and os.environ['SERVER_SOFTWARE'].startswith('Dev'):
+  from igrok.settings.dev import *
+  
