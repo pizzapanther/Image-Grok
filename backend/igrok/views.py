@@ -54,7 +54,7 @@ def create_image (url, width, height):
     
   return http.HttpResponsePermanentRedirect(thumb.url())
   
-#@cache_page(60 * 5)
+@cache_page(60 * 5)
 def grok (request, protocol, img_url):
   img_url = protocol + '://' + img_url
   
