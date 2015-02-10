@@ -1,0 +1,22 @@
+application: imagegrok
+version: 1
+runtime: python27
+api_version: 1
+threadsafe: true
+
+handlers:
+- url: /static
+  static_dir: static
+  
+- url: .*
+  script: igrok.wsgi.application
+  
+env_variables:
+  DJANGO_SETTINGS_MODULE: 'igrok.settings'
+  
+libraries:
+- name: PIL
+  version: "latest"
+
+builtins:
+- remote_api: on
