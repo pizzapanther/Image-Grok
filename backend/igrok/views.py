@@ -2,7 +2,6 @@ import time
 import json
 import logging
 import hashlib
-from urlparse import urlparse
 
 from django import http
 from django.conf import settings
@@ -10,9 +9,6 @@ from django.views.decorators.cache import cache_page
 
 from google.appengine.api import urlfetch
 from google.appengine.api import memcache
-from google.appengine.api import images
-
-import cloudstorage as gcs
 
 from .models import Thumbnail
 
@@ -28,51 +24,10 @@ def create_image (url, width, height):
     result = urlfetch.fetch(url)
     
     if result.status_code == 200:
-      urlobj = urlparse(url)
-      
-      count = 0
-      while 1:
-        new_name = urlobj.hostname + urlobj.path + '.' + str(count)
-        new_path = Thumbnail.location + "/" + new_name
+      thumb = Thumbnail.create(result.content, url, width, height)
+      if isinstance(thumb, http.HttpResponse):
+        return thumb
         
-        try:
-          gcs.stat(new_path)
-          
-        except gcs.NotFoundError:
-          break
-          
-        else:
-          count += 1
-          
-        if count > 20:
-          return http.HttpResponse(
-            'Too Many Images With The Same Name',
-            status=400,
-            content_type='text/plain'
-          )
-          
-      thumbnail = images.resize(
-        result.content,
-        width=width,
-        height=height,
-        #output_encoding=images.PNG,
-        #crop_to_fit=True,
-        allow_stretch=False,
-        #crop_offset_y=0.25,
-      )
-      
-      gcs_file = gcs.open(new_path, mode='w')
-      gcs_file.write(thumbnail)
-      gcs_file.close()
-      
-      thumbnail = Thumbnail(
-        file=new_name,
-        original=url,
-        width=width,
-        height=height
-      )
-      thumbnail.put()
-      
     else:
       return http.HttpResponse(
         result.content,
@@ -99,7 +54,7 @@ def create_image (url, width, height):
     
   return http.HttpResponsePermanentRedirect(thumb.url())
   
-@cache_page(60 * 5)
+#@cache_page(60 * 5)
 def grok (request, protocol, img_url):
   img_url = protocol + '://' + img_url
   
