@@ -33,7 +33,7 @@ class Thumbnail (ndb.Model):
     return images.get_serving_url(self.gs_key(), secure_url=SECURE_URL)
     
   @classmethod
-  def create (cls, content, url, width, height):
+  def create (cls, content, url, width, height, crop):
     urlobj = urlparse(url)
     
     count = 0
@@ -57,15 +57,17 @@ class Thumbnail (ndb.Model):
           content_type='text/plain'
         )
         
-    thumbnail = images.resize(
-      content,
-      width=width,
-      height=height,
-      #output_encoding=images.PNG,
-      #crop_to_fit=True,
-      allow_stretch=False,
-      #crop_offset_y=0.25,
-    )
+    kwargs = {
+      'width': width,
+      'height': height,
+      'allow_stretch': False,
+    }
+    
+    if crop:
+      kwargs['crop_to_fit'] = True
+      kwargs['crop_offset_y'] = 0.25
+      
+    thumbnail = images.resize(content, **kwargs)
     
     gcs_file = gcs.open(new_path, mode='w')
     gcs_file.write(thumbnail)
@@ -75,7 +77,8 @@ class Thumbnail (ndb.Model):
       file=new_name,
       original=url,
       width=width,
-      height=height
+      height=height,
+      crop=crop,
     )
     thumbnail.put()
     
