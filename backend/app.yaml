@@ -17,6 +17,8 @@ env_variables:
 libraries:
 - name: PIL
   version: "latest"
-
+- name: ssl
+  version: latest
+  
 builtins:
 - remote_api: on
