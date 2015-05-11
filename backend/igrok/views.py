@@ -50,6 +50,7 @@ def create_image (url, width, height, crop):
       else:
         time.sleep(0.01)
         
+  Thumbnail.cache_me(thumb, url, width, height, crop)
   if settings.DEV:
     return http.HttpResponseRedirect(thumb.url())
     
@@ -76,13 +77,21 @@ def grok (request, protocol, img_url):
       content_type='text/plain'
     )
     
-  thumb = Thumbnail.query(
-    Thumbnail.original == img_url,
-    Thumbnail.width == width,
-    Thumbnail.height == height,
-    Thumbnail.crop == crop,
-  ).get()
-  
+  cache_key = Thumbnail.cache_key(img_url, width, height, crop)
+  thumb = memcache.get(cache_key)
+  if thumb:
+    logging.info('Cached: {} {} {} {}'.format(img_url, width, height, crop))
+    
+  else:
+    logging.info('Querying: {} {} {} {}'.format(img_url, width, height, crop))
+    thumb = Thumbnail.query(
+      Thumbnail.original == img_url,
+      Thumbnail.width == width,
+      Thumbnail.height == height,
+      Thumbnail.crop == crop,
+    ).get()
+    Thumbnail.cache_me(thumb, img_url, width, height, crop)
+    
   if thumb:
     if settings.DEV:
       return http.HttpResponseRedirect(thumb.url())

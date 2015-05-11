@@ -1,4 +1,6 @@
 from urlparse import urlparse
+import json
+import hashlib
 
 from django.conf import settings
 from django import http
@@ -31,6 +33,17 @@ class Thumbnail (ndb.Model):
     
   def url (self):
     return images.get_serving_url(self.gs_key(), secure_url=SECURE_URL)
+    
+  @classmethod
+  def cache_me (cls, instance, url, width, height, crop):
+    key = cls.cache_key(url, width, height, crop)
+    memcache.add(key, instance, time=600)
+    
+  @classmethod
+  def cache_key (cls, url, width, height, crop):
+    key = json.dumps([url, width, height, crop])
+    key = 'thumbnail-instance:' + hashlib.sha1(key).hexdigest()
+    return key
     
   @classmethod
   def create (cls, content, url, width, height, crop):
